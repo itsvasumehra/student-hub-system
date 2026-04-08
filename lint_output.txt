@@ -1,0 +1,180 @@
+
+> student-hub@0.1.0 lint
+> eslint
+
+
+C:\Users\Vasu\student-hub\app\api\auth\sign-up\route.ts
+  44:39  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\api\faculty\attendance\route.ts
+  65:42  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\api\public\subjects\route.ts
+  47:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\api\student\attendance\route.ts
+  37:33  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\api\test-connection\route.ts
+   9:19  warning  'sessionData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  13:13  warning  'data' is assigned a value but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\Vasu\student-hub\app\faculty\assignments\page.tsx
+  139:45  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  139:60  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  145:32  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\faculty\attendance\page.tsx
+   67:54  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+   67:65  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  181:45  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  181:61  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  194:27  error  Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\faculty\dashboard\page.tsx
+  28:18  error  Error: Cannot access variable before it is declared
+
+`fetchMySubjects` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\Vasu\student-hub\app\faculty\dashboard\page.tsx:28:18
+  26 |
+  27 |   useEffect(() => {
+> 28 |     if (profile) fetchMySubjects()
+     |                  ^^^^^^^^^^^^^^^ `fetchMySubjects` accessed before it is declared
+  29 |   }, [profile])
+  30 |
+  31 |   useEffect(() => {
+
+C:\Users\Vasu\student-hub\app\faculty\dashboard\page.tsx:39:3
+  37 |   }, [loading, user, profile, router])
+  38 |
+> 39 |   const fetchMySubjects = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 40 |     try {
+     | ^^^^^^^^^
+> 41 |       const res = await fetch('/api/faculty/subjects')
+     | ^^^^^^^^^
+> 42 |       const json = await res.json()
+     | ^^^^^^^^^
+> 43 |       if (res.ok && json.data) setMySubjects(json.data)
+     | ^^^^^^^^^
+> 44 |     } catch (err) {
+     | ^^^^^^^^^
+> 45 |       console.error('Error fetching faculty subjects:', err)
+     | ^^^^^^^^^
+> 46 |     }
+     | ^^^^^^^^^
+> 47 |   }
+     | ^^^^ `fetchMySubjects` is declared here
+  48 |
+  49 |   if (loading || !user || !profile || profile.role !== 'faculty') {
+  50 |     return (  react-hooks/immutability
+
+C:\Users\Vasu\student-hub\app\faculty\marks\page.tsx
+   18:11  warning  'profile' is assigned a value but never used                     @typescript-eslint/no-unused-vars
+   19:27  warning  'error' is assigned a value but never used                       @typescript-eslint/no-unused-vars
+   43:36  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+  167:47  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  167:59  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  182:32  error    Unexpected any. Specify a different type                         @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\faculty\students\page.tsx
+   4:10  warning  'motion' is defined but never used          @typescript-eslint/no-unused-vars
+   5:23  warning  'XCircle' is defined but never used         @typescript-eslint/no-unused-vars
+  51:23  warning  'error' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  59:41  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+  95:21  error    Unexpected any. Specify a different type    @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\login\page.tsx
+   16:19  warning  'user' is assigned a value but never used                        @typescript-eslint/no-unused-vars
+   17:9   warning  'router' is assigned a value but never used                      @typescript-eslint/no-unused-vars
+  159:18  error    `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\Vasu\student-hub\app\not-found.tsx
+  16:97  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\Vasu\student-hub\app\register\page.tsx
+  88:6  warning  React Hook useEffect has a missing dependency: 'fetchSubjects'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Vasu\student-hub\app\student\activities\page.tsx
+   4:10  warning  'motion' is defined but never used               @typescript-eslint/no-unused-vars
+   6:16  warning  'CardHeader' is defined but never used           @typescript-eslint/no-unused-vars
+   6:28  warning  'CardTitle' is defined but never used            @typescript-eslint/no-unused-vars
+   6:39  warning  'CardDescription' is defined but never used      @typescript-eslint/no-unused-vars
+  62:23  warning  'uploadData' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\Vasu\student-hub\app\student\assignments\page.tsx
+   4:25  warning  'Clock' is defined but never used         @typescript-eslint/no-unused-vars
+  34:42  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  35:44  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:30  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  91:32  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\student\attendance\page.tsx
+  35:45  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  75:28  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\student\dashboard\page.tsx
+  75:15  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+  75:22  error  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`  react/no-unescaped-entities
+
+C:\Users\Vasu\student-hub\app\student\marks\page.tsx
+   22:11  warning  'profile' is assigned a value but never used  @typescript-eslint/no-unused-vars
+   43:47  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   45:48  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+   48:33  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+  109:35  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\Vasu\student-hub\app\test-connection\page.tsx
+  9:5  error  Error: Cannot access variable before it is declared
+
+`testConnection` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\Vasu\student-hub\app\test-connection\page.tsx:9:5
+   7 |
+   8 |   useEffect(() => {
+>  9 |     testConnection()
+     |     ^^^^^^^^^^^^^^ `testConnection` accessed before it is declared
+  10 |   }, [])
+  11 |
+  12 |   const testConnection = async () => {
+
+C:\Users\Vasu\student-hub\app\test-connection\page.tsx:12:3
+  10 |   }, [])
+  11 |
+> 12 |   const testConnection = async () => {
+     |   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 13 |     try {
+     | ^^^^^^^^^
+> 14 |       setStatus('Testing Server-side Connection...')
+     …
+     | ^^^^^^^^^
+> 28 |     }
+     | ^^^^^^^^^
+> 29 |   }
+     | ^^^^ `testConnection` is declared here
+  30 |
+  31 |   return (
+  32 |     <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">  react-hooks/immutability
+
+C:\Users\Vasu\student-hub\fix_any.js
+  1:12  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+  2:14  error  A `require()` style import is forbidden  @typescript-eslint/no-require-imports
+
+C:\Users\Vasu\student-hub\hooks\useMarks.ts
+  32:6  warning  React Hook useCallback has a missing dependency: 'params'. Either include it or remove the dependency array  react-hooks/exhaustive-deps
+
+C:\Users\Vasu\student-hub\lib\auth-context.tsx
+   15:9    error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+   18:91   error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+   18:107  error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+   19:56   error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+   32:54   error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+   40:36   error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+   50:53   error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+  100:5    warning  Unused eslint-disable directive (no problems were reported from 'react-hooks/exhaustive-deps')
+  109:21   error    Unexpected any. Specify a different type                                                        @typescript-eslint/no-explicit-any
+
+✖ 63 problems (44 errors, 19 warnings)
+  0 errors and 1 warning potentially fixable with the `--fix` option.
+
