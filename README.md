@@ -1,37 +1,92 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Student Hub – Full-Stack Academic Management System
 
-## Getting Started
+A modern full-stack academic management platform designed to streamline interactions between students and faculty through secure, role-based workflows and real-time academic tracking.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## System Overview
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Student Hub provides a unified platform for managing:
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Attendance tracking  
+- Assignment submission and grading  
+- Academic performance monitoring  
+- Extracurricular activity logging  
+- Resume generation  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The system enforces strict **role-based access control (RBAC)** and **database-level security (RLS)** to ensure data privacy and integrity.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## Tech Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### Frontend
+- Next.js (App Router)
+- React 19
+- TypeScript
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### UI & Styling
+- Tailwind CSS
+- Framer Motion
+- Lucide Icons
 
-## Deploy on Vercel
+### Backend & Database
+- Supabase (PostgreSQL)
+- Supabase SSR Authentication
+- Row Level Security (RLS)
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Storage
+- Supabase Buckets (file uploads)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
-"# student-hub-system" 
+---
+
+## Key Features
+
+- Role-based portals for Students and Faculty  
+- Secure data access using Row Level Security (RLS)  
+- Assignment creation, submission, and grading workflow  
+- Attendance and marks management system  
+- Extracurricular activity tracking with approval system  
+- Resume generator with dynamic data rendering  
+
+---
+
+## Application Architecture
+
+### Faculty Workflow
+- Manage subjects and student data  
+- Mark attendance and upload grades  
+- Create assignments and evaluate submissions  
+- Review extracurricular activities  
+
+### Student Workflow
+- View attendance and academic performance  
+- Submit assignments and track deadlines  
+- Upload and manage academic documents  
+- Generate resume from academic data  
+
+---
+
+## System Design Highlights
+
+- Middleware-based route protection using Next.js  
+- Secure session handling via SSR authentication  
+- Database-level access control via RLS policies  
+- Modular service-based architecture for API interaction  
+
+---
+
+## Future Enhancements
+
+- Real-time notifications  
+- AI-based performance insights  
+- Mobile application support  
+
+---
+
+## Key Learning Outcomes
+
+- Designing secure full-stack systems  
+- Implementing RBAC and database-level security  
+- Managing complex relational data workflows  
+- Building scalable modern web applications  
