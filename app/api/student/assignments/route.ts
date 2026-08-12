@@ -1,9 +1,9 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getDepartmentVariants } from '@/lib/departments'
 import { NextResponse } from 'next/server'
 
 // GET /api/student/assignments
-// Returns all assignments for subjects the student is enrolled in (by department + semester),
-// along with the student's submission status for each.
+// Returns assignments for subjects matching the student's department + semester.
 export async function GET() {
   try {
     const supabase = await createSupabaseServerClient()
@@ -20,7 +20,25 @@ export async function GET() {
       return NextResponse.json({ error: 'Student profile not found' }, { status: 403 })
     }
 
-    // Get assignments for subjects matching the student's department + semester
+    if (!profile.semester) {
+      return NextResponse.json({ data: [] })
+    }
+
+    const deptVariants = getDepartmentVariants(profile.department)
+
+    const { data: subjects, error: sError } = await supabase
+      .from('subjects')
+      .select('id, department, semester')
+      .in('department', deptVariants)
+      .eq('semester', profile.semester)
+
+    if (sError) return NextResponse.json({ error: sError.message }, { status: 400 })
+
+    const subjectIds = subjects?.map((s) => s.id) ?? []
+    if (subjectIds.length === 0) {
+      return NextResponse.json({ data: [] })
+    }
+
     const { data: assignments, error: aError } = await supabase
       .from('assignments')
       .select(`
@@ -28,19 +46,19 @@ export async function GET() {
         subjects ( id, code, name, semester ),
         profiles!assignments_faculty_id_fkey ( name )
       `)
+      .in('subject_id', subjectIds)
       .order('due_date', { ascending: true })
 
     if (aError) return NextResponse.json({ error: aError.message }, { status: 400 })
 
-    // Fetch this student's submissions
     const { data: submissions } = await supabase
       .from('submissions')
-      .select('assignment_id, status, marks_obtained, submitted_at')
+      .select('id, assignment_id, status, marks_obtained, submitted_at, file_url, notes')
       .eq('student_id', profile.id)
 
-    const submissionMap = new Map(submissions?.map(s => [s.assignment_id, s]) ?? [])
+    const submissionMap = new Map(submissions?.map((s) => [s.assignment_id, s]) ?? [])
 
-    const enriched = (assignments ?? []).map(a => ({
+    const enriched = (assignments ?? []).map((a) => ({
       ...a,
       submission: submissionMap.get(a.id) ?? null,
     }))

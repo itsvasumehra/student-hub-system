@@ -36,9 +36,18 @@ export const useAuth = () => {
 }
 
 // Safe JSON parser — gracefully handles HTML error pages from Next.js.
-async function safeJson(response: Response): Promise<any> {
+interface SafeJsonResult {
+  session?: { user: User } | null
+  profile?: UserProfile | null
+  success?: boolean
+  error?: string
+  message?: string
+  warning?: string
+}
+
+async function safeJson(response: Response): Promise<SafeJsonResult> {
   const ct = response.headers.get('content-type') ?? ''
-  if (ct.includes('application/json')) return response.json()
+  if (ct.includes('application/json')) return response.json() as Promise<SafeJsonResult>
   // Server returned HTML (e.g. Next.js error page) — don't crash
   return { error: `Server error (${response.status})` }
 }
@@ -54,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Calls the server API route which validates the session server-side.
   // Returns the data so callers (signIn) can act on it immediately.
   //
-  async function fetchSession(): Promise<{ session: { user: User } | null; profile: UserProfile | null } | null> {
+  async function fetchSession(): Promise<SafeJsonResult | null> {
     try {
       const res = await fetch('/api/auth/session')
       const data = await safeJson(res)

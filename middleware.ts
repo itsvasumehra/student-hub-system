@@ -59,7 +59,8 @@ export async function middleware(request: NextRequest) {
   }
 
   const pathname = request.nextUrl.pathname
-  const isPublicPage = ['/login', '/register'].some(p => pathname.startsWith(p))
+// Public auth pages — no login required
+  const isPublicPage = ['/login', '/register', '/forgot-password', '/reset-password'].some(p => pathname.startsWith(p))
 
   // Not logged in → protect everything except public pages and home
   if (!user && !isPublicPage && pathname !== '/') {

@@ -1,9 +1,10 @@
 'use client'
+
 import { useMarks } from '@/hooks/useMarks'
-import { useAuth } from '@/lib/auth-context'
 import { motion } from 'framer-motion'
-import { BarChart3, BookOpen, TrendingUp, Loader2, AlertCircle } from 'lucide-react'
+import { BarChart3, BookOpen, TrendingUp, Loader2, AlertCircle, GraduationCap } from 'lucide-react'
 import type { Mark } from '@/lib/types'
+import { calculateSGPA } from '@/lib/gpa'
 
 const EXAM_LABELS: Record<string, string> = {
   internal1: 'Internal 1',
@@ -20,7 +21,6 @@ const EXAM_COLORS: Record<string, string> = {
 }
 
 export default function StudentMarksPage() {
-  const { profile } = useAuth()
   const { marks, loading, error } = useMarks()
 
   if (loading) {
@@ -40,7 +40,7 @@ export default function StudentMarksPage() {
     )
   }
 
-  // Calculate summary stats
+  const { sgpa, subjects: subjectGpas } = calculateSGPA(marks)
   const totalSubjects = new Set(marks.map((m: Mark) => m.subjects?.id)).size
   const avgPercentage = marks.length
     ? Math.round(marks.reduce((acc: number, m: Mark) => acc + (m.score / m.max_score) * 100, 0) / marks.length)
@@ -52,24 +52,24 @@ export default function StudentMarksPage() {
   const fadeIn = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }
 
   return (
-    <div className="p-6 lg:p-8 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
+    <div className="max-w-6xl mx-auto space-y-8">
       <motion.div initial="hidden" animate="visible" variants={fadeIn}>
         <h1 className="text-2xl font-bold text-slate-900">My Marks</h1>
-        <p className="text-slate-500 mt-1">View all your exam scores and performance.</p>
+        <p className="text-slate-500 mt-1">View exam scores, SGPA, and performance by subject.</p>
       </motion.div>
 
-      {/* Stats Row */}
       <motion.div
-        initial="hidden" animate="visible"
+        initial="hidden"
+        animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.1 } } }}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-4"
+        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
       >
         {[
-          { label: 'Subjects Tracked', value: totalSubjects, icon: BookOpen, color: 'text-brand-600 bg-brand-50' },
+          { label: 'SGPA (10 scale)', value: marks.length ? sgpa.toFixed(2) : '—', icon: GraduationCap, color: 'text-brand-600 bg-brand-50' },
+          { label: 'Subjects Tracked', value: totalSubjects, icon: BookOpen, color: 'text-indigo-600 bg-indigo-50' },
           { label: 'Average Score', value: `${avgPercentage}%`, icon: BarChart3, color: 'text-purple-600 bg-purple-50' },
           { label: 'Best Performance', value: `${Math.round(highestScore)}%`, icon: TrendingUp, color: 'text-green-600 bg-green-50' },
-        ].map(stat => (
+        ].map((stat) => (
           <motion.div key={stat.label} variants={fadeIn} className="glass p-5 rounded-2xl flex items-center gap-4">
             <div className={`w-11 h-11 rounded-xl flex items-center justify-center ${stat.color}`}>
               <stat.icon className="w-5 h-5" />
@@ -82,8 +82,40 @@ export default function StudentMarksPage() {
         ))}
       </motion.div>
 
-      {/* Marks Table */}
-      <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ delay: 0.3 }}
+      {subjectGpas.length > 0 && (
+        <motion.div initial="hidden" animate="visible" variants={fadeIn} className="glass rounded-2xl overflow-hidden">
+          <div className="px-6 py-4 border-b border-slate-100">
+            <h2 className="text-base font-semibold text-slate-900">SGPA by Subject</h2>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                <tr>
+                  <th className="px-6 py-3 text-left">Subject</th>
+                  <th className="px-6 py-3 text-center">Credits</th>
+                  <th className="px-6 py-3 text-center">Percentage</th>
+                  <th className="px-6 py-3 text-center">Grade Point</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {subjectGpas.map((s) => (
+                  <tr key={s.subjectId} className="hover:bg-slate-50">
+                    <td className="px-6 py-4">
+                      <p className="font-medium text-slate-900">{s.subjectName}</p>
+                      <p className="text-xs text-slate-400">{s.subjectCode}</p>
+                    </td>
+                    <td className="px-6 py-4 text-center text-slate-600">{s.credits}</td>
+                    <td className="px-6 py-4 text-center font-semibold">{s.percentage}%</td>
+                    <td className="px-6 py-4 text-center font-bold text-brand-600">{s.gradePoint}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </motion.div>
+      )}
+
+      <motion.div initial="hidden" animate="visible" variants={fadeIn} transition={{ delay: 0.2 }}
         className="glass rounded-2xl overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-100">
           <h2 className="text-base font-semibold text-slate-900">All Exam Scores</h2>

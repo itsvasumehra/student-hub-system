@@ -30,7 +30,7 @@ export default function ResumePage() {
       const res = await fetch('/api/student/resume')
       const json = await res.json()
       if (!res.ok) { setError(json.error || 'Failed to load resume data'); return }
-      setResumeData(json.data)
+      setResumeData({ ...json.data, experience: json.data.experience ?? [] })
     } catch {
       setError('Network error — please try again')
     } finally {

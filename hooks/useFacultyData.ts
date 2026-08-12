@@ -1,12 +1,13 @@
 'use client'
 // hooks/useFacultyData.ts
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useRef } from 'react'
 import { getFacultySubjects, getFacultyStudents, type FacultySubject, type StudentProfile } from '@/services/faculty.service'
 
 export function useFacultyOverview() {
   const [subjects, setSubjects] = useState<FacultySubject[]>([])
   const [students, setStudents] = useState<StudentProfile[]>([])
   const [loading, setLoading] = useState(true)
+  const hasFetched = useRef(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -25,10 +26,11 @@ export function useFacultyOverview() {
   }, [])
 
   useEffect(() => {
-    if (subjects.length === 0) {
+    if (!hasFetched.current) {
+      hasFetched.current = true
       fetchData()
     }
-  }, [fetchData, subjects.length])
+  }, [fetchData])
 
   return { subjects, students, loading, refetch: fetchData }
 }

@@ -24,7 +24,7 @@ export async function GET() {
     const studentId = baseProfile.id
 
     // Fetch all sub-sections in parallel
-    const [extRes, skillsRes, projectsRes, achievementsRes] = await Promise.all([
+    const [extRes, skillsRes, projectsRes, achievementsRes, experienceRes] = await Promise.all([
       supabase
         .from('student_profiles')
         .select('phone, address, photo_url, bio, college_name, degree, cgpa, linkedin_url, github_url, website_url')
@@ -45,6 +45,12 @@ export async function GET() {
         .select('id, title, issuer, date_awarded, description, cert_url')
         .eq('student_id', studentId)
         .order('sort_order', { ascending: true }),
+      supabase
+        .from('student_experience')
+        .select('id, company, role, start_date, end_date, description, is_current')
+        .eq('student_id', studentId)
+        .order('sort_order', { ascending: true })
+        .order('start_date', { ascending: false }),
     ])
 
     return NextResponse.json({
@@ -70,6 +76,7 @@ export async function GET() {
         skills: skillsRes.data ?? [],
         projects: projectsRes.data ?? [],
         achievements: achievementsRes.data ?? [],
+        experience: experienceRes.data ?? [],
       },
     })
   } catch (err: unknown) {

@@ -1,7 +1,8 @@
 'use client'
 
+import Link from 'next/link'
 import { motion } from 'framer-motion'
-import { Settings, UserCircle2, Mail, Building2, GraduationCap, LogOut } from 'lucide-react'
+import { Settings, UserCircle2, Mail, Building2, GraduationCap, LogOut, KeyRound } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
 
 export default function StudentSettingsPage() {
@@ -54,13 +55,20 @@ export default function StudentSettingsPage() {
           <div className="rounded-xl border border-slate-200 bg-white/70 p-4">
             <p className="text-xs text-slate-500 mb-1 flex items-center gap-2">
               <GraduationCap className="w-4 h-4" />
-              Role
+              Semester
             </p>
-            <p className="text-sm font-medium text-slate-900 capitalize">{profile?.role ?? 'Student'}</p>
+            <p className="text-sm font-medium text-slate-900">{profile?.semester ?? '—'}</p>
           </div>
         </div>
 
-        <div className="pt-2 border-t border-slate-200">
+        <div className="pt-2 border-t border-slate-200 flex flex-wrap gap-3">
+          <Link
+            href="/forgot-password"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-medium bg-brand-50 text-brand-700 hover:bg-brand-100 transition-colors"
+          >
+            <KeyRound className="w-4 h-4" />
+            Change password
+          </Link>
           <button
             type="button"
             onClick={signOut}

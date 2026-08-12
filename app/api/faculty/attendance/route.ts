@@ -62,6 +62,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'records array is required' }, { status: 400 })
     }
 
+    const validStatuses = ['present', 'absent', 'late']
+    for (const r of records) {
+      if (!validStatuses.includes(r.status)) {
+        return NextResponse.json({ error: `Invalid status: ${r.status}. Must be present, absent, or late.` }, { status: 400 })
+      }
+    }
+
     const rowsToUpsert = records.map((r) => ({
       student_id: r.student_id,
       subject_id: r.subject_id,

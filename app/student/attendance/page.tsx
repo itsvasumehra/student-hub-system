@@ -1,8 +1,10 @@
 'use client'
+
 import { useAttendance } from '@/hooks/useAttendance'
 import { motion } from 'framer-motion'
 import { CalendarCheck, Loader2, AlertCircle, AlertTriangle, CheckCircle2 } from 'lucide-react'
 import type { Attendance, AttendanceSummary } from '@/lib/types'
+import { getAttendanceDeficit } from '@/lib/attendance-utils'
 
 function AttendanceBar({ percentage }: { percentage: number }) {
   const color = percentage >= 75 ? 'bg-green-500' : percentage >= 60 ? 'bg-yellow-500' : 'bg-red-500'
@@ -21,32 +23,39 @@ function AttendanceBar({ percentage }: { percentage: number }) {
 export default function StudentAttendancePage() {
   const { records, summary, loading, error } = useAttendance()
 
-  if (loading) return (
-    <div className="flex items-center justify-center h-64">
-      <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
-    </div>
-  )
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-brand-500" />
+      </div>
+    )
+  }
 
-  if (error) return (
-    <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
-      <AlertCircle className="w-5 h-5 flex-shrink-0" /><span>{error}</span>
-    </div>
-  )
+  if (error) {
+    return (
+      <div className="flex items-center gap-3 p-4 bg-red-50 text-red-700 rounded-xl border border-red-200">
+        <AlertCircle className="w-5 h-5 flex-shrink-0" />
+        <span>{error}</span>
+      </div>
+    )
+  }
 
   const overallPresent = records.filter((r: Attendance) => r.status === 'present' || r.status === 'late').length
   const overallPct = records.length ? Math.round((overallPresent / records.length) * 100) : 0
+
+  const deficits = summary.map((s: AttendanceSummary) => getAttendanceDeficit(s))
+  const atRiskCount = deficits.filter((d) => d.atRisk).length
 
   const fadeIn = { hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }
   const stagger = { visible: { transition: { staggerChildren: 0.08 } } }
 
   return (
-    <div className="p-6 lg:p-8 max-w-5xl mx-auto space-y-8">
+    <div className="max-w-5xl mx-auto space-y-8">
       <motion.div initial="hidden" animate="visible" variants={fadeIn}>
         <h1 className="text-2xl font-bold text-slate-900">Attendance</h1>
         <p className="text-slate-500 mt-1">Your attendance record across all subjects.</p>
       </motion.div>
 
-      {/* Overall card */}
       <motion.div initial="hidden" animate="visible" variants={fadeIn}
         className="glass p-6 rounded-2xl flex items-center gap-6">
         <div className={`w-20 h-20 rounded-2xl flex items-center justify-center text-2xl font-bold
@@ -56,12 +65,13 @@ export default function StudentAttendancePage() {
         <div>
           <h2 className="text-lg font-bold text-slate-900">Overall Attendance</h2>
           <p className="text-sm text-slate-500">{overallPresent} present out of {records.length} classes</p>
-          {overallPct < 75 && (
+          {atRiskCount > 0 && (
             <p className="text-sm text-red-600 font-medium mt-1 flex items-center gap-1">
-              <AlertTriangle className="w-4 h-4" /> Below 75% threshold — at risk
+              <AlertTriangle className="w-4 h-4" />
+              {atRiskCount} subject{atRiskCount > 1 ? 's' : ''} below 75% threshold
             </p>
           )}
-          {overallPct >= 75 && (
+          {overallPct >= 75 && atRiskCount === 0 && (
             <p className="text-sm text-green-600 font-medium mt-1 flex items-center gap-1">
               <CheckCircle2 className="w-4 h-4" /> Good standing
             </p>
@@ -69,30 +79,38 @@ export default function StudentAttendancePage() {
         </div>
       </motion.div>
 
-      {/* Per-subject breakdown */}
       {summary.length > 0 ? (
         <motion.div initial="hidden" animate="visible" variants={stagger} className="space-y-4">
           <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">Subject Breakdown</h2>
-          {summary.map((s: AttendanceSummary) => (
-            <motion.div key={s.subject_id} variants={fadeIn} className="glass p-5 rounded-2xl">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <h3 className="font-semibold text-slate-900">{s.subject_name}</h3>
-                  <p className="text-xs text-slate-400">{s.subject_code}</p>
+          {summary.map((s: AttendanceSummary) => {
+            const deficit = getAttendanceDeficit(s)
+            return (
+              <motion.div key={s.subject_id} variants={fadeIn} className="glass p-5 rounded-2xl">
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="font-semibold text-slate-900">{s.subject_name}</h3>
+                    <p className="text-xs text-slate-400">{s.subject_code}</p>
+                  </div>
+                  <span className={`text-lg font-bold ${s.percentage >= 75 ? 'text-green-600' : s.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                    {s.percentage}%
+                  </span>
                 </div>
-                <span className={`text-lg font-bold ${s.percentage >= 75 ? 'text-green-600' : s.percentage >= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
-                  {s.percentage}%
-                </span>
-              </div>
-              <AttendanceBar percentage={s.percentage} />
-              <div className="flex gap-4 mt-3 text-xs text-slate-500">
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> {s.present} Present</span>
-                <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> {s.absent} Absent</span>
-                {s.late > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> {s.late} Late</span>}
-                <span className="ml-auto">{s.total} Total classes</span>
-              </div>
-            </motion.div>
-          ))}
+                <AttendanceBar percentage={s.percentage} />
+                <div className="flex gap-4 mt-3 text-xs text-slate-500">
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-green-500 inline-block" /> {s.present} Present</span>
+                  <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-red-500 inline-block" /> {s.absent} Absent</span>
+                  {s.late > 0 && <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-yellow-500 inline-block" /> {s.late} Late</span>}
+                  <span className="ml-auto">{s.total} Total classes</span>
+                </div>
+                {deficit.atRisk && deficit.classesNeeded > 0 && (
+                  <p className="mt-3 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 flex items-center gap-2">
+                    <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+                    Attend <strong>{deficit.classesNeeded}</strong> more class{deficit.classesNeeded > 1 ? 'es' : ''} to reach 75%
+                  </p>
+                )}
+              </motion.div>
+            )
+          })}
         </motion.div>
       ) : (
         <div className="py-20 text-center text-slate-400">

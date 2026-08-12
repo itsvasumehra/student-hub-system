@@ -5,14 +5,14 @@ import { useAuth } from '@/lib/auth-context'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  User, GraduationCap, Wrench, FolderGit2, Trophy,
-  Save, Plus, Trash2, ExternalLink, Github, Linkedin,
+  User, GraduationCap, Wrench, FolderGit2, Trophy, Briefcase,
+  Save, Plus, Trash2, ExternalLink, Github, Linkedin, Pencil,
   Phone, MapPin, Globe, Loader2, CheckCircle2, Camera,
   ChevronDown, ChevronUp, AlertCircle, X
 } from 'lucide-react'
 import type {
   StudentExtendedProfile, StudentSkill,
-  StudentProject, StudentAchievement
+  StudentProject, StudentAchievement, StudentExperience
 } from '@/lib/types'
 
 // ─── Tab config ──────────────────────────────────────────────────────────────
@@ -21,6 +21,7 @@ const TABS = [
   { id: 'academic',     label: 'Academic',      icon: GraduationCap },
   { id: 'skills',       label: 'Skills',        icon: Wrench },
   { id: 'projects',     label: 'Projects',      icon: FolderGit2 },
+  { id: 'experience',   label: 'Experience',    icon: Briefcase },
   { id: 'achievements', label: 'Achievements',  icon: Trophy },
 ] as const
 type TabId = typeof TABS[number]['id']
@@ -70,14 +71,14 @@ function Tag({ label, onRemove }: { label: string; onRemove: () => void }) {
 }
 
 // ─── Profile completeness bar ─────────────────────────────────────────────────
-function CompletenessBar({ profile, skills, projects, achievements }: {
+function CompletenessBar({ profile, skills, projects, experience, achievements }: {
   profile: Partial<StudentExtendedProfile> & { name?: string; email?: string; department?: string }
-  skills: StudentSkill[]; projects: StudentProject[]; achievements: StudentAchievement[]
+  skills: StudentSkill[]; projects: StudentProject[]; experience: StudentExperience[]; achievements: StudentAchievement[]
 }) {
   const checks = [
     !!profile.name, !!profile.phone, !!profile.address,
     !!profile.bio, !!profile.college_name, !!profile.degree, !!profile.cgpa,
-    skills.length > 0, projects.length > 0, achievements.length > 0,
+    skills.length > 0, projects.length > 0, experience.length > 0, achievements.length > 0,
   ]
   const filled = checks.filter(Boolean).length
   const pct = Math.round((filled / checks.length) * 100)
@@ -451,7 +452,7 @@ function ProjectsTab({ projects: initialProjects }: { projects: StudentProject[]
               </div>
               <div className="flex items-center gap-2">
                 <button onClick={e => { e.stopPropagation(); startEdit(p) }} className="p-2 rounded-lg hover:bg-brand-50 text-slate-400 hover:text-brand-600 transition">
-                  <Save className="w-4 h-4" />
+                  <Pencil className="w-4 h-4" />
                 </button>
                 <button onClick={e => { e.stopPropagation(); handleDelete(p.id) }} className="p-2 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition">
                   <Trash2 className="w-4 h-4" />
@@ -520,6 +521,156 @@ function ProjectsTab({ projects: initialProjects }: { projects: StudentProject[]
         <button onClick={() => { setAdding(true); setEditId(null); resetForm() }}
           className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-dashed border-brand-300 text-brand-600 text-sm font-semibold hover:bg-brand-50 transition w-full justify-center">
           <Plus className="w-4 h-4" />Add Project
+        </button>
+      )}
+    </div>
+  )
+}
+
+// ─── Tab: Experience ──────────────────────────────────────────────────────────
+function ExperienceTab({ experience: initialExp }: { experience: StudentExperience[] }) {
+  const [experience, setExperience] = useState(initialExp)
+  const [adding, setAdding] = useState(false)
+  const [editId, setEditId] = useState<string | null>(null)
+  const [form, setForm] = useState({
+    company: '', role: '', start_date: '', end_date: '', description: '', is_current: false,
+  })
+  const [saving, setSaving] = useState(false)
+  const [error, setError] = useState('')
+
+  const reset = () => setForm({ company: '', role: '', start_date: '', end_date: '', description: '', is_current: false })
+  const set = (k: keyof typeof form) => (v: string | boolean) => setForm(f => ({ ...f, [k]: v }))
+
+  const handleSubmit = async () => {
+    if (!form.company.trim() || !form.role.trim()) { setError('Company and role are required'); return }
+    setSaving(true); setError('')
+    try {
+      const payload = { ...form, end_date: form.is_current ? null : form.end_date }
+      if (editId) {
+        const res = await fetch('/api/student/profile/experience', {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ id: editId, ...payload }),
+        })
+        const data = await res.json()
+        if (!res.ok) { setError(data.error); return }
+        setExperience(prev => prev.map(e => e.id === editId ? data.data : e))
+      } else {
+        const res = await fetch('/api/student/profile/experience', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json()
+        if (!res.ok) { setError(data.error); return }
+        setExperience(prev => [...prev, data.data])
+      }
+      reset(); setAdding(false); setEditId(null)
+    } finally { setSaving(false) }
+  }
+
+  const handleDelete = async (id: string) => {
+    setExperience(prev => prev.filter(e => e.id !== id))
+    await fetch('/api/student/profile/experience', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id }),
+    })
+  }
+
+  const startEdit = (e: StudentExperience) => {
+    setForm({
+      company: e.company,
+      role: e.role,
+      start_date: e.start_date ?? '',
+      end_date: e.end_date ?? '',
+      description: e.description ?? '',
+      is_current: e.is_current,
+    })
+    setEditId(e.id); setAdding(true)
+  }
+
+  const formatRange = (e: StudentExperience) => {
+    const fmt = (d: string) => new Date(d).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })
+    if (e.is_current) return e.start_date ? `${fmt(e.start_date)} — Present` : 'Present'
+    if (e.start_date && e.end_date) return `${fmt(e.start_date)} — ${fmt(e.end_date)}`
+    return e.start_date ? fmt(e.start_date) : ''
+  }
+
+  return (
+    <div className="space-y-4">
+      {error && <p className="text-sm text-rose-500 flex items-center gap-2"><AlertCircle className="w-4 h-4" />{error}</p>}
+
+      <div className="space-y-3">
+        {experience.length === 0 && !adding && (
+          <div className="text-center py-10 text-slate-400">
+            <Briefcase className="w-10 h-10 mx-auto mb-2 opacity-40" />
+            <p className="text-sm">No experience yet. Add internships or jobs!</p>
+          </div>
+        )}
+        {experience.map(e => (
+          <div key={e.id} className="flex items-start gap-4 p-4 rounded-2xl border border-slate-100 bg-white shadow-xs">
+            <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+              <Briefcase className="w-4 h-4 text-indigo-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-slate-800">{e.role}</p>
+              <p className="text-xs text-slate-500 mt-0.5">{e.company}</p>
+              {formatRange(e) && <p className="text-xs text-slate-400 mt-0.5">{formatRange(e)}</p>}
+              {e.description && <p className="text-xs text-slate-600 mt-1">{e.description}</p>}
+            </div>
+            <div className="flex gap-1 flex-shrink-0">
+              <button onClick={() => startEdit(e)} className="p-2 rounded-lg hover:bg-brand-50 text-slate-400 hover:text-brand-600 transition">
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => handleDelete(e.id)} className="p-2 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition">
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <AnimatePresence>
+        {adding && (
+          <motion.div
+            initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 10 }}
+            className="border border-indigo-200 rounded-2xl bg-indigo-50/50 p-5 space-y-4"
+          >
+            <p className="text-sm font-bold text-slate-700">{editId ? 'Edit Experience' : 'Add Experience'}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <InputField label="Company *" value={form.company} onChange={set('company') as (v: string) => void} placeholder="e.g. Google" />
+              <InputField label="Role *" value={form.role} onChange={set('role') as (v: string) => void} placeholder="e.g. Software Intern" />
+              <InputField label="Start Date" value={form.start_date} onChange={set('start_date') as (v: string) => void} type="date" />
+              <InputField label="End Date" value={form.end_date} onChange={set('end_date') as (v: string) => void} type="date" />
+            </div>
+            <label className="flex items-center gap-2 text-sm text-slate-600 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.is_current}
+                onChange={(ev) => set('is_current')(ev.target.checked)}
+                className="rounded border-slate-300 text-brand-600"
+              />
+              I currently work here
+            </label>
+            <InputField label="Description" value={form.description} onChange={set('description') as (v: string) => void} placeholder="What did you work on?" textarea />
+            <div className="flex gap-3 justify-end">
+              <button onClick={() => { setAdding(false); setEditId(null); reset(); setError('') }}
+                className="px-4 py-2 rounded-xl text-sm text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+              <button onClick={handleSubmit} disabled={saving}
+                className="flex items-center gap-2 px-5 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition disabled:opacity-60">
+                {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Briefcase className="w-4 h-4" />}
+                {editId ? 'Update' : 'Add Experience'}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {!adding && (
+        <button onClick={() => { setAdding(true); setEditId(null); reset() }}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl border-2 border-dashed border-indigo-300 text-indigo-600 text-sm font-semibold hover:bg-indigo-50 transition w-full justify-center">
+          <Plus className="w-4 h-4" />Add Experience
         </button>
       )}
     </div>
@@ -609,7 +760,7 @@ function AchievementsTab({ achievements: initialAch }: { achievements: StudentAc
             </div>
             <div className="flex gap-1 flex-shrink-0">
               <button onClick={() => startEdit(a)} className="p-2 rounded-lg hover:bg-brand-50 text-slate-400 hover:text-brand-600 transition">
-                <Save className="w-3.5 h-3.5" />
+                <Pencil className="w-3.5 h-3.5" />
               </button>
               <button onClick={() => handleDelete(a.id)} className="p-2 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-500 transition">
                 <Trash2 className="w-3.5 h-3.5" />
@@ -665,6 +816,7 @@ export default function StudentProfilePage() {
   const [extProfile, setExtProfile] = useState<Partial<StudentExtendedProfile>>({})
   const [skills, setSkills] = useState<StudentSkill[]>([])
   const [projects, setProjects] = useState<StudentProject[]>([])
+  const [experience, setExperience] = useState<StudentExperience[]>([])
   const [achievements, setAchievements] = useState<StudentAchievement[]>([])
   const [pageLoading, setPageLoading] = useState(true)
   const skillsLoaded = useRef(false)
@@ -683,18 +835,20 @@ export default function StudentProfilePage() {
     const load = async () => {
       setPageLoading(true)
       try {
-        const [profRes, skillsRes, projRes, achRes] = await Promise.all([
+        const [profRes, skillsRes, projRes, expRes, achRes] = await Promise.all([
           fetch('/api/student/profile'),
           fetch('/api/student/profile/skills'),
           fetch('/api/student/profile/projects'),
+          fetch('/api/student/profile/experience'),
           fetch('/api/student/profile/achievements'),
         ])
-        const [profData, skillsData, projData, achData] = await Promise.all([
-          profRes.json(), skillsRes.json(), projRes.json(), achRes.json()
+        const [profData, skillsData, projData, expData, achData] = await Promise.all([
+          profRes.json(), skillsRes.json(), projRes.json(), expRes.json(), achRes.json()
         ])
         if (profData.data) setExtProfile(profData.data)
         if (skillsData.data) setSkills(skillsData.data)
         if (projData.data) setProjects(projData.data)
+        if (expData.data) setExperience(expData.data)
         if (achData.data) setAchievements(achData.data)
         skillsLoaded.current = true
         projectsLoaded.current = true
@@ -743,9 +897,35 @@ export default function StudentProfilePage() {
                 : profile.name.charAt(0).toUpperCase()
               }
             </div>
-            <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-brand-50 transition shadow-sm">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              id="avatar-upload"
+              onChange={async (e) => {
+                const file = e.target.files?.[0]
+                if (!file) return
+                try {
+                  const { supabase } = await import('@/lib/supabase-client')
+                  const ext = file.name.split('.').pop()
+                  const path = `${user!.id}/avatar.${ext}`
+                  const { error: uploadErr } = await supabase.storage.from('profile-photos').upload(path, file, { upsert: true })
+                  if (uploadErr) { console.error('Upload failed:', uploadErr); return }
+                  const { data: urlData } = supabase.storage.from('profile-photos').getPublicUrl(path)
+                  const photoUrl = urlData.publicUrl
+                  await saveProfile({ photo_url: photoUrl })
+                  setExtProfile(prev => ({ ...prev, photo_url: photoUrl }))
+                } catch (err) {
+                  console.error('Avatar upload error:', err)
+                }
+              }}
+            />
+            <label
+              htmlFor="avatar-upload"
+              className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-white border border-slate-200 flex items-center justify-center cursor-pointer hover:bg-brand-50 transition shadow-sm"
+            >
               <Camera className="w-3 h-3 text-slate-500" />
-            </div>
+            </label>
           </div>
           <div>
             <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">{profile.name}</h1>
@@ -759,7 +939,7 @@ export default function StudentProfilePage() {
       </motion.div>
 
       {/* Completeness bar */}
-      <CompletenessBar profile={{ ...extProfile, name: profile.name, email: profile.email }} skills={skills} projects={projects} achievements={achievements} />
+      <CompletenessBar profile={{ ...extProfile, name: profile.name, email: profile.email }} skills={skills} projects={projects} experience={experience} achievements={achievements} />
 
       {/* Tab navigation */}
       <div className="flex gap-1 bg-white border border-slate-100 rounded-2xl p-1.5 shadow-sm overflow-x-auto">
@@ -799,6 +979,9 @@ export default function StudentProfilePage() {
         )}
         {activeTab === 'projects' && (
           <ProjectsTab projects={projects} />
+        )}
+        {activeTab === 'experience' && (
+          <ExperienceTab experience={experience} />
         )}
         {activeTab === 'achievements' && (
           <AchievementsTab achievements={achievements} />

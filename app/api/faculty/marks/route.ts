@@ -63,6 +63,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
     }
 
+    if (score < 0 || score > max_score) {
+      return NextResponse.json({ error: `Score must be between 0 and ${max_score}` }, { status: 400 })
+    }
+
     const { data, error } = await supabase
       .from('marks')
       .upsert({

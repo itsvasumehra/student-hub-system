@@ -45,6 +45,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'No marks to save — enter at least one score' }, { status: 400 })
     }
 
+    for (const r of rowsToSave) {
+      const currentMax = max_score ?? r.max_score ?? 100
+      if ((r.score as number) < 0 || (r.score as number) > currentMax) {
+        return NextResponse.json({ error: `Invalid score for student ${r.student_id}. Score must be between 0 and ${currentMax}` }, { status: 400 })
+      }
+    }
+
     const upsertData = rowsToSave.map(r => ({
       student_id: r.student_id,
       subject_id,

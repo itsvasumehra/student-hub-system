@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { motion } from 'framer-motion'
-import { Plus, Trophy, FileText, Loader2, UploadCloud } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Plus, Trophy, FileText, Loader2, UploadCloud, CheckCircle2, AlertCircle } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { DataTable, Column } from '@/components/ui/data-table'
 import { Modal } from '@/components/ui/modal'
@@ -22,6 +22,7 @@ export default function StudentActivitiesPage() {
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null)
   
   // Form State
   const [title, setTitle] = useState('')
@@ -48,6 +49,13 @@ export default function StudentActivitiesPage() {
   useEffect(() => {
     fetchActivities()
   }, [])
+
+  useEffect(() => {
+    if (toast) {
+      const t = setTimeout(() => setToast(null), 4000)
+      return () => clearTimeout(t)
+    }
+  }, [toast])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -90,14 +98,15 @@ export default function StudentActivitiesPage() {
         setDescription('')
         setDate('')
         setProofFile(null)
+        setToast({ message: 'Activity logged successfully', type: 'success' })
         fetchActivities()
       } else {
         const errData = await res.json()
-        alert(`Error: ${errData.error}`)
+        setToast({ message: `Error: ${errData.error}`, type: 'error' })
       }
     } catch (err: unknown) {
-      if (err instanceof Error) alert(`Upload failed: ${err.message}`)
-      else alert(`Upload failed: Unknown error`)
+      if (err instanceof Error) setToast({ message: `Upload failed: ${err.message}`, type: 'error' })
+      else setToast({ message: `Upload failed: Unknown error`, type: 'error' })
     } finally {
       setSubmitting(false)
     }
@@ -147,6 +156,18 @@ export default function StudentActivitiesPage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
+      {/* Toast */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className={`fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-2xl shadow-lg text-sm font-medium
+              ${toast.type === 'success' ? 'bg-green-600 text-white' : 'bg-red-600 text-white'}`}>
+            {toast.type === 'success' ? <CheckCircle2 className="w-4 h-4" /> : <AlertCircle className="w-4 h-4" />}
+            {toast.message}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2">

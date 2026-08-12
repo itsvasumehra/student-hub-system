@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js'
+import { getDepartmentVariants } from '@/lib/departments'
 import { NextResponse } from 'next/server'
 
 // GET /api/public/subjects?department=X&semester=Y
@@ -25,10 +26,12 @@ export async function GET(request: Request) {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
+    const deptVariants = getDepartmentVariants(department)
+
     let query = supabase
       .from('subjects')
-      .select('id, code, name, semester')
-      .eq('department', department)
+      .select('id, code, name, semester, department')
+      .in('department', deptVariants)
       .order('semester')
       .order('code')
 

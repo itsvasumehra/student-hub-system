@@ -1,4 +1,5 @@
 import { createSupabaseServerClient } from '@/lib/supabase-server'
+import { getDepartmentVariants } from '@/lib/departments'
 import { NextResponse } from 'next/server'
 
 // GET /api/faculty/students?subject_id=X
@@ -47,13 +48,13 @@ export async function GET(request: Request) {
       .eq('role', 'student')
       .order('roll_number', { ascending: true })
 
-    if (department) query = query.eq('department', department)
+    if (department) query = query.in('department', getDepartmentVariants(department))
     if (semester) query = query.eq('semester', semester)
 
     const { data, error } = await query
     if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
-    return NextResponse.json({ data })
+    return NextResponse.json({ data: data ?? [] })
   } catch (error: unknown) {
     return NextResponse.json({ error: error instanceof Error ? error.message : 'Unknown error' }, { status: 500 })
   }

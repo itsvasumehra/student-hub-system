@@ -1,4 +1,5 @@
 import { Github, Globe, Linkedin, Mail, MapPin, Phone, ExternalLink } from 'lucide-react'
+import { safeFormatDate } from '@/lib/utils'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 export interface ResumeData {
@@ -26,6 +27,11 @@ export interface ResumeData {
     id: string; title: string; issuer?: string
     date_awarded?: string; description?: string; cert_url?: string
   }[]
+  experience: {
+    id: string; company: string; role: string
+    start_date?: string; end_date?: string
+    description?: string; is_current: boolean
+  }[]
 }
 
 // ─── Section heading ──────────────────────────────────────────────────────────
@@ -47,7 +53,16 @@ export function ResumePreview({ data }: { data: ResumeData }) {
   const hasSkills = data.skills.length > 0
   const hasProjects = data.projects.length > 0
   const hasAchievements = data.achievements.length > 0
+  const hasExperience = data.experience.length > 0
   const hasEducation = !!(data.college_name || data.degree || data.department)
+
+  const formatDateRange = (start?: string, end?: string, isCurrent?: boolean) => {
+    const fmt = (d: string) => safeFormatDate(d)
+    if (!start && !end) return ''
+    if (isCurrent) return `${start ? fmt(start) : ''} — Present`.replace(/^ — /, '')
+    if (start && end) return `${fmt(start)} — ${fmt(end)}`
+    return start ? fmt(start) : end ? fmt(end) : ''
+  }
 
   const contactItems = [
     data.email     && { icon: Mail,     label: data.email,       href: `mailto:${data.email}` },
@@ -177,6 +192,35 @@ export function ResumePreview({ data }: { data: ResumeData }) {
         </section>
       )}
 
+      {/* ── EXPERIENCE ─────────────────────────────────────── */}
+      {hasExperience && (
+        <section className="mb-5">
+          <SectionHeading title="Experience" />
+          <div className="space-y-4">
+            {data.experience.map((exp) => (
+              <div key={exp.id}>
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <p className="font-bold text-slate-800 text-[13px]">{exp.role}</p>
+                    <p className="text-[12.5px] text-slate-600">{exp.company}</p>
+                  </div>
+                  {(exp.start_date || exp.end_date || exp.is_current) && (
+                    <p className="text-[11.5px] text-slate-400 flex-shrink-0">
+                      {formatDateRange(exp.start_date, exp.end_date, exp.is_current)}
+                    </p>
+                  )}
+                </div>
+                {exp.description && (
+                  <p className="text-[12.5px] text-slate-600 mt-1 leading-relaxed print:text-gray-600">
+                    {exp.description}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── PROJECTS ───────────────────────────────────────── */}
       {hasProjects && (
         <section className="mb-5">
@@ -242,7 +286,7 @@ export function ResumePreview({ data }: { data: ResumeData }) {
                   <span className="font-semibold text-slate-800 text-[13px]">{a.title}</span>
                   {(a.issuer || a.date_awarded) && (
                     <span className="text-[11.5px] text-slate-400 ml-2 print:text-gray-400">
-                      {[a.issuer, a.date_awarded ? new Date(a.date_awarded).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }) : null].filter(Boolean).join(' · ')}
+                      {[a.issuer, a.date_awarded ? safeFormatDate(a.date_awarded) : null].filter(Boolean).join(' · ')}
                     </span>
                   )}
                   {a.description && (

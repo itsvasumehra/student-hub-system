@@ -145,8 +145,14 @@ ALTER TABLE messages       ENABLE ROW LEVEL SECURITY;
 -- profiles
 CREATE POLICY "profiles_select_own"
   ON profiles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "profiles_faculty_select_students"
+  ON profiles FOR SELECT
+  USING (
+    (SELECT role FROM profiles WHERE user_id = auth.uid() LIMIT 1) = 'faculty'
+    AND role = 'student'
+  );
 CREATE POLICY "profiles_insert"
-  ON profiles FOR INSERT WITH CHECK (true);
+  ON profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
 CREATE POLICY "profiles_update_own"
   ON profiles FOR UPDATE USING (auth.uid() = user_id);
 
@@ -241,6 +247,11 @@ CREATE POLICY "attendance_faculty_update"
   USING (
     faculty_id = (SELECT id FROM profiles WHERE user_id = auth.uid() LIMIT 1)
   );
+CREATE POLICY "attendance_faculty_select"
+  ON attendance FOR SELECT
+  USING (
+    faculty_id = (SELECT id FROM profiles WHERE user_id = auth.uid() LIMIT 1)
+  );
 
 -- activities
 CREATE POLICY "activities_student_select"
@@ -287,7 +298,10 @@ CREATE POLICY "messages_select"
     receiver_id = (SELECT id FROM profiles WHERE user_id = auth.uid() LIMIT 1)
   );
 CREATE POLICY "messages_insert"
-  ON messages FOR INSERT TO authenticated WITH CHECK (true);
+  ON messages FOR INSERT TO authenticated
+  WITH CHECK (
+    sender_id = (SELECT id FROM profiles WHERE user_id = auth.uid() LIMIT 1)
+  );
 
 
 -- ── 4. SEED SUBJECTS (Sample data) ──────────────────────────
@@ -298,5 +312,11 @@ INSERT INTO subjects (code, name, department, semester) VALUES
   ('CS603', 'Software Engineering', 'Computer Science', 6),
   ('CS604', 'Web Technologies', 'Computer Science', 6),
   ('CS501', 'Operating Systems', 'Computer Science', 5),
-  ('CS502', 'Theory of Computation', 'Computer Science', 5)
+  ('CS502', 'Theory of Computation', 'Computer Science', 5),
+  ('IT601', 'Human Computer Interaction', 'Information Technology', 6),
+  ('IT602', 'Modern Cryptography', 'Information Technology', 6),
+  ('IT603', 'Data warehousing and Data Mining', 'Information Technology', 6),
+  ('IT604', 'Mobile Computing', 'Information Technology', 6),
+  ('IT605', 'Information Coding Theory', 'Information Technology', 6),
+  ('IT606', 'Cyber Security', 'Information Technology', 6)
 ON CONFLICT (code) DO NOTHING;

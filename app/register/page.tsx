@@ -31,30 +31,8 @@ interface Subject {
   semester?: number
 }
 
-// Hardcoded fallback subjects per department.
-// Used when the API is unreachable — ensures faculty can always register.
-const FALLBACK_SUBJECTS: Record<string, Subject[]> = {
-  'Computer Science': [
-    { id: 'cs501', code: 'CS501', name: 'Operating Systems', semester: 5 },
-    { id: 'cs502', code: 'CS502', name: 'Theory of Computation', semester: 5 },
-    { id: 'cs601', code: 'CS601', name: 'Database Management Systems', semester: 6 },
-    { id: 'cs602', code: 'CS602', name: 'Computer Networks', semester: 6 },
-    { id: 'cs603', code: 'CS603', name: 'Software Engineering', semester: 6 },
-    { id: 'cs604', code: 'CS604', name: 'Web Technologies', semester: 6 },
-  ],
-  'Electronics': [
-    { id: 'ec501', code: 'EC501', name: 'Digital Electronics', semester: 5 },
-    { id: 'ec502', code: 'EC502', name: 'Signals & Systems', semester: 5 },
-  ],
-  'IT': [
-    { id: 'IT601', code: 'IT601', name: 'Human Computer Interaction', semester: 6 },
-    { id: 'IT602', code: 'IT602', name: 'Modern Cryptography', semester: 6 },
-    { id: 'IT603', code: 'IT603', name: 'Data warehousing and Data Mining', semester: 6 },
-    { id: 'IT604', code: 'IT604', name: 'Mobile Computing', semester: 6 },
-    { id: 'IT605', code: 'IT605', name: 'Information Coding Theory', semester: 6 },
-    { id: 'IT606', code: 'IT606', name: 'Cyber Security', semester: 6 },
-  ],
-}
+
+
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -75,6 +53,7 @@ export default function RegisterPage() {
   })
   const [loading, setLoading] = useState(false)
   const [loadingSubjects, setLoadingSubjects] = useState(false)
+  const [subjectsFetchError, setSubjectsFetchError] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
 
@@ -89,26 +68,24 @@ export default function RegisterPage() {
 
   const fetchSubjects = async () => {
     setLoadingSubjects(true)
-    // Always seed with hardcoded fallback first so UI is never stuck
-    const fallback = FALLBACK_SUBJECTS[formData.department] ?? []
+    setSubjectsFetchError(false)
     try {
       const params = new URLSearchParams({ department: formData.department })
       if (role === 'student') params.set('semester', formData.semester)
       const url = `/api/public/subjects?${params.toString()}`
-      console.log('[Register] Fetching subjects from:', url)
       const res = await fetch(url)
       const json = await res.json()
-      console.log('[Register] Subjects response:', json)
       if (res.ok && Array.isArray(json.data) && json.data.length > 0) {
-        // Use real DB subjects (they have real UUIDs that foreign keys need)
         setSubjects(json.data)
       } else {
-        console.warn('[Register] API returned empty — using hardcoded fallback. RLS may be blocking reads.')
-        setSubjects(fallback)
+        console.warn('[Register] API returned empty subjects. RLS may be blocking reads.')
+        setSubjects([])
+        setSubjectsFetchError(true)
       }
-    } catch (error) {
-      console.error('[Register] Fetch error — using hardcoded fallback:', error)
-      setSubjects(fallback)
+    } catch (err) {
+      console.error('[Register] Fetch error:', err)
+      setSubjects([])
+      setSubjectsFetchError(true)
     } finally {
       setLoadingSubjects(false)
     }
@@ -340,7 +317,7 @@ export default function RegisterPage() {
                         <option value="Electronics">Electronics</option>
                         <option value="Mechanical">Mechanical</option>
                         <option value="Civil">Civil</option>
-                        <option value="IT">Information Technology</option>
+                        <option value="Information Technology">Information Technology</option>
                       </select>
                     </div>
                   </div>
@@ -392,9 +369,15 @@ export default function RegisterPage() {
                       {loadingSubjects ? (
                         <p className="text-sm text-slate-500 flex items-center"><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading subjects from department...</p>
                       ) : subjects.length === 0 ? (
-                        <div className="text-center py-2">
-                          <p className="text-sm text-slate-500">No subjects found for this department.</p>
-                          <button type="button" onClick={fetchSubjects} className="text-xs text-brand-600 hover:underline mt-1">Retry</button>
+                        <div className="text-center py-3">
+                          <p className="text-sm text-slate-500">
+                            {subjectsFetchError
+                              ? 'Could not load subjects from the database. Please check your connection and try again.'
+                              : 'No subjects found for this department.'}
+                          </p>
+                          <button type="button" onClick={fetchSubjects} className="mt-2 px-4 py-1.5 text-sm font-medium text-brand-600 bg-brand-50 border border-brand-200 rounded-lg hover:bg-brand-100 transition">
+                            Retry
+                          </button>
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">

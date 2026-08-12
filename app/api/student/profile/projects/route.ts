@@ -68,6 +68,9 @@ export async function PUT(req: NextRequest) {
 
     const { id, title, description, tech_stack, project_url, github_url } = await req.json()
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 })
+    if (!title?.trim()) {
+      return NextResponse.json({ error: 'title is required and cannot be empty' }, { status: 400 })
+    }
 
     const { data, error } = await supabase
       .from('student_projects')

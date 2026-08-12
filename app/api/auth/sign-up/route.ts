@@ -102,6 +102,10 @@ export async function POST(request: Request) {
             .upsert(facultySubjects, { onConflict: 'faculty_id,subject_id' })
           if (fsError) {
             console.error('faculty_subjects upsert error:', fsError.message)
+            return NextResponse.json({
+              success: true,
+              warning: 'Account created but subject assignment failed. Please configure subjects in Settings.'
+            })
           }
         }
       }

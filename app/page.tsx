@@ -17,7 +17,7 @@ import {
 
 export default function HomePage() {
   const router = useRouter()
-  const { user, profile, loading } = useAuth()
+  const { user, profile, loading, signOut } = useAuth()
 
   // Auto-redirect authenticated users to their dashboard
   useEffect(() => {
@@ -80,18 +80,15 @@ export default function HomePage() {
               Complete Registration
             </button>
           </Link>
-          <Link href="/api/auth/sign-out">
-            <button
-              onClick={async (e) => {
-                e.preventDefault()
-                await fetch('/api/auth/sign-out', { method: 'POST' })
-                window.location.href = '/login'
-              }}
-              className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl transition-all shadow-sm hover:bg-slate-50"
-            >
-              Sign out & re-login
-            </button>
-          </Link>
+          <button
+            onClick={async (e) => {
+              e.preventDefault()
+              await signOut()
+            }}
+            className="flex items-center gap-2 px-6 py-3 bg-white border border-slate-200 text-slate-700 font-medium rounded-xl transition-all shadow-sm hover:bg-slate-50"
+          >
+            Sign out & re-login
+          </button>
         </div>
       </div>
     )
